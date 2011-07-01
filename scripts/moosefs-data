@@ -1,0 +1,4 @@
+#!/usr/bin/env python2
+'''
+Returns information via the command line about the moosefs master
+'''
