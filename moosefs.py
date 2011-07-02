@@ -48,49 +48,6 @@ try:
 except:
     pass
 
-def servers_data():
-    s = socket.socket()
-    s.connect((masterhost,masterport))
-    mysend(s,struct.pack(">LL",500,0))
-    header = myrecv(s,8)
-    cmd,length = struct.unpack(">LL",header)
-    if cmd==501 and masterversion >= (1,5,13) and (length%54)==0:
-        data = myrecv(s,length)
-        n = length/54
-        servers = []
-        for i in xrange(n):
-            d = data[i*54:(i+1)*54]
-            v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
-            try:
-                host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
-            except Exception:
-                host = "(unresolved)"
-            ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
-            ver = '.'.join([str(v1), str(v2), str(v3)])
-            servers.append({
-                'host':      host,
-                'ip':        ip,
-                'version':   ver,
-                'port':      port,
-                'used':      used,
-                'total':     total,
-                'chunks':    chunks,
-                'tdused':    tdused,
-                'tdtotal':   tdtotal,
-                'tdchucnks': tdchunks,
-                'errcnt':    errcnt,
-            })
-            # This function only returns raw data, in bytes.
-            # The Web UI also includes:
-            # regular hdd space, used (human readable) (based on used)
-            # regular hdd space, total (human readable) (based on total)
-            # regular hdd space, percent used (int((used*200.0)/total),(used*100.0)/total))
-            # marked for removal hdd space, used (human readable) (based on tdused)
-            # marked for removal hdd space, total (human readable) (based on tdtotal)
-            # marked for removal hdd space, percent used (int((tdused*200.0)/tdtotal),(tdused*100.0)/tdtotal))
-        print servers
-    s.close()
-
 def info_data():
     # Basic info table
     s = socket.socket()
@@ -118,7 +75,6 @@ def info_data():
             'all_chunk_copies':     allcopies,
             'regular_chunk_copies': tdcopies,
         }
-        print info
     s.close()
 
     # All chunks state matrix
@@ -196,6 +152,57 @@ def info_data():
         check_info = {
             'important_messages':    'No important messages',
         }
+
+    ret = {
+        'info': info,
+        'matrix': matrix,
+        'chunk_info': chunk_info,
+        'check_info': check_info,
+    }
+    return ret
+
+def servers_data():
+    s = socket.socket()
+    s.connect((masterhost,masterport))
+    mysend(s,struct.pack(">LL",500,0))
+    header = myrecv(s,8)
+    cmd,length = struct.unpack(">LL",header)
+    if cmd==501 and masterversion >= (1,5,13) and (length%54)==0:
+        data = myrecv(s,length)
+        n = length/54
+        servers = []
+        for i in xrange(n):
+            d = data[i*54:(i+1)*54]
+            v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
+            try:
+                host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+            except Exception:
+                host = "(unresolved)"
+            ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
+            ver = '.'.join([str(v1), str(v2), str(v3)])
+            servers.append({
+                'host':      host,
+                'ip':        ip,
+                'version':   ver,
+                'port':      port,
+                'used':      used,
+                'total':     total,
+                'chunks':    chunks,
+                'tdused':    tdused,
+                'tdtotal':   tdtotal,
+                'tdchucnks': tdchunks,
+                'errcnt':    errcnt,
+            })
+            # This function only returns raw data, in bytes.
+            # The Web UI also includes:
+            # regular hdd space, used (human readable) (based on used)
+            # regular hdd space, total (human readable) (based on total)
+            # regular hdd space, percent used (int((used*200.0)/total),(used*100.0)/total))
+            # marked for removal hdd space, used (human readable) (based on tdused)
+            # marked for removal hdd space, total (human readable) (based on tdtotal)
+            # marked for removal hdd space, percent used (int((tdused*200.0)/tdtotal),(tdused*100.0)/tdtotal))
+    s.close()
+    return servers
 
 info_data()
 sys.exit(0)
