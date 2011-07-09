@@ -214,50 +214,119 @@ def mfs_info(INmatrix=0):
     }
     return ret
 
-def servers_data():
-    s = socket.socket()
-    s.connect((masterhost,masterport))
-    mysend(s,struct.pack(">LL",500,0))
-    header = myrecv(s,8)
-    cmd,length = struct.unpack(">LL",header)
-    if cmd==501 and masterversion >= (1,5,13) and (length%54)==0:
-        data = myrecv(s,length)
-        n = length/54
-        servers = []
-        for i in xrange(n):
-            d = data[i*54:(i+1)*54]
-            v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
-            try:
-                host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
-            except Exception:
-                host = "(unresolved)"
-            ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
-            ver = '.'.join([str(v1), str(v2), str(v3)])
-            servers.append({
-                'host':      host,
-                'ip':        ip,
-                'version':   ver,
-                'port':      port,
-                'used':      used,
-                'total':     total,
-                'chunks':    chunks,
-                'tdused':    tdused,
-                'tdtotal':   tdtotal,
-                'tdchucnks': tdchunks,
-                'errcnt':    errcnt,
-            })
-            # This function only returns raw data, in bytes.
-            # The Web UI also includes:
-            # regular hdd space, used (human readable) (based on used)
-            # regular hdd space, total (human readable) (based on total)
-            # regular hdd space, percent used (int((used*200.0)/total),(used*100.0)/total))
-            # marked for removal hdd space, used (human readable) (based on tdused)
-            # marked for removal hdd space, total (human readable) (based on tdtotal)
-            # marked for removal hdd space, percent used (int((tdused*200.0)/tdtotal),(tdused*100.0)/tdtotal))
-    s.close()
-    # TODO: Metadata Backup Loggers (starting at line 791 in mfs.cgi)
+def mfs_servers():
+    servers = []
+    try:
+        s = socket.socket()
+        s.connect((masterhost,masterport))
+        mysend(s,struct.pack(">LL",500,0))
+        header = myrecv(s,8)
+        cmd,length = struct.unpack(">LL",header)
+        if cmd==501 and masterversion>=(1,5,13) and (length%54)==0:
+            data = myrecv(s,length)
+            n = length/54
+            for i in xrange(n):
+                d = data[i*54:(i+1)*54]
+                v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
+                host = ''
+                try:
+                    host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                except Exception:
+                    host = "(unresolved)"
+                ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
+                ver = '.'.join([str(v1), str(v2), str(v3)])
+                percent_used = ''
+                if (total>0):
+                    percent_used = (used*100.0)/total
+                else:
+                    percent_used = '-'
+                tdpercent_used = ''
+                if (tdtotal>0):
+                    tdpercent_used = (tdused*100.0)/tdtotal
+                else:
+                    tdpercent_used = ''
+                servers.append({
+                    'host':           host,
+                    'ip':             ip,
+                    'version':        ver,
+                    'port':           port,
+                    'used':           used,
+                    'total':          total,
+                    'chunks':         chunks,
+                    'percent_used':   percent_used,
+                    'tdused':         tdused,
+                    'tdtotal':        tdtotal,
+                    'tdchucnks':      tdchunks,
+                    'tdpercent_used': tdpercent_used,
+                    'errcount':       errcnt,
+                })
+        elif cmd==501 and masterversion<(1,5,13) and (length%50)==0:
+            data = myrecv(s,length)
+            n = length/50
+            for i in xrange(n):
+                d = data[i*50:(i+1)*50]
+                ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">BBBBHQQLQQLL",d)
+                try:
+                    host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                except Exception:
+                    host = "(unresolved)"
+                ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
+                percent_used = ''
+                if (total>0):
+                    percent_used = (used*100.0)/total
+                else:
+                    percent_used = '-'
+                tdpercent_used = ''
+                if (tdtotal>0):
+                    tdpercent_used = (tdused*100.0)/tdtotal
+                else:
+                    tdpercent_used = ''
+                servers.append({
+                    'host':           host,
+                    'ip':             ip,
+                    'port':           port,
+                    'used':           used,
+                    'total':          total,
+                    'chunks':         chunks,
+                    'percent_used':   percent_used,
+                    'tdused':         tdused,
+                    'tdtotal':        tdtotal,
+                    'tdchucnks':      tdchunks,
+                    'tdpercent_used': tdpercent_used,
+                    'errcount':       errcnt,
+                })
+        s.close()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+    # Metadata backup loggers
+    mbloggers = []
+    if masterversion>=(1,6,5):
+        try:
+            s = socket.socket()
+            s.connect((masterhost,masterport))
+            mysend(s,struct.pack(">LL",522,0))
+            header = myrecv(s,8)
+            cmd,length = struct.unpack(">LL",header)
+            if cmd==523 and (length%8)==0:
+                data = myrecv(s,length)
+                n = length/8
+                for i in xrange(n):
+                    d = data[i*8:(i+1)*8]
+                    v1,v2,v3,ip1,ip2,ip3,ip4 = struct.unpack(">HBBBBBB",d)
+                    ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
+                    ver = '.'.join([str(v1), str(v2), str(v3)])
+                    try:
+                        host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                    except Exception:
+                        host = "(unresolved)"
+                    mbloggers.append((host,ip,ver))
+            s.close()
+        except Exception:
+            traceback.print_exc(file=sys.stdout)
     ret = {
-        'servers': servers,
+        'servers':                 servers,
+        'metadata_backup_loggers': mbloggers,
     }
     return ret
 
@@ -468,6 +537,6 @@ def disks_data():
             #else:
             #i += 1
 
-status = mfs_info()
+status = mfs_servers()
 print status
 sys.exit(0)
