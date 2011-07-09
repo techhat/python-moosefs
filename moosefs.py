@@ -544,6 +544,98 @@ def mfs_exports():
 
     return servers
 
-status = mfs_exports()
+def mfs_mountl():
+    # This section appeared in the original mfs.cgi,
+    # but doesn't actually show up in the browser.
+    # An old version of section MS, perhaps?
+    # I have left it here for historical reasons.
+    servers = []
+
+    try:
+        s = socket.socket()
+        s.connect((masterhost,masterport))
+        mysend(s,struct.pack(">LL",508,0))
+        header = myrecv(s,8)
+        cmd,length = struct.unpack(">LL",header)
+        if cmd==509 and masterversion<=(1,5,13) and (length%136)==0:
+            data = myrecv(s,length)
+            n = length/136
+            for i in xrange(n):
+                d = data[i*136:(i+1)*136]
+                addrdata = d[0:8]
+                stats_c = []
+                stats_l = []
+                ip1,ip2,ip3,ip4,spare,v1,v2,v3 = struct.unpack(">BBBBBBBB",addrdata)
+                ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
+                if v1==0 and v2==0:
+                    if v3==2:
+                        ver = "1.3.x"
+                    elif v3==3:
+                        ver = "1.4.x"
+                    else:
+                        ver = "unknown"
+                else:
+                    ver = "%d.%d.%d" % (v1,v2,v3)
+                for i in xrange(16):
+                    stats_c.append(struct.unpack(">L",d[i*4+8:i*4+12]))
+                    stats_l.append(struct.unpack(">L",d[i*4+72:i*4+76]))
+                try:
+                    host = (socket.gethostbyaddr(ipnum))[0]
+                except Exception:
+                    host = "(unresolved)"
+                servers.append((host,ipnum,ver,stats_c,stats_l))
+        s.close()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+    return servers
+
+def mfs_mounts():
+    servers = []
+
+    try:
+        s = socket.socket()
+        s.connect((masterhost,masterport))
+        mysend(s,struct.pack(">LL",508,0))
+        header = myrecv(s,8)
+        cmd,length = struct.unpack(">LL",header)
+        if cmd==509 and masterversion>=(1,5,14):
+            data = myrecv(s,length)
+            pos = 0
+            while pos<length:
+                sessionid,ip1,ip2,ip3,ip4,v1,v2,v3,ileng = struct.unpack(">LBBBBHBBL",data[pos:pos+16])
+                ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
+                ver = "%d.%d.%d" % (v1,v2,v3)
+                pos+=16
+                info = data[pos:pos+ileng]
+                pos+=ileng
+                pleng = struct.unpack(">L",data[pos:pos+4])[0]
+                pos+=4
+                path = data[pos:pos+pleng]
+                pos+=pleng
+                if masterversion>=(1,6,1):
+                    sesflags,rootuid,rootgid,mapalluid,mapallgid = struct.unpack(">BLLLL",data[pos:pos+17])
+                    pos+=145  # 17+64+64 - skip stats
+                else:
+                    sesflags,rootuid,rootgid = struct.unpack(">BLL",data[pos:pos+9])
+                    mapalluid = 0
+                    mapallgid = 0
+                    pos+=137  # 9+64+64 - skip stats
+                if path=='.':
+                    meta=1
+                else:
+                    meta=0
+                try:
+                    host = (socket.gethostbyaddr(ipnum))[0]
+                except Exception:
+                    host = "(unresolved)"
+                servers.append((sessionid,host,ipnum,info,ver,meta,path,sesflags,rootuid,rootgid,mapalluid,mapallgid))
+        s.close()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+    return servers
+
+status = mfs_mounts()
 print status
 sys.exit(0)
