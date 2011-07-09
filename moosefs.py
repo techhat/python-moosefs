@@ -636,6 +636,49 @@ def mfs_mounts():
 
     return servers
 
+def mfs_operations():
+    servers = []
+
+    try:
+        s = socket.socket()
+        s.connect((masterhost,masterport))
+        mysend(s,struct.pack(">LL",508,0))
+        header = myrecv(s,8)
+        cmd,length = struct.unpack(">LL",header)
+        if cmd==509 and masterversion>=(1,5,14):
+            data = myrecv(s,length)
+            pos = 0
+            while pos<length:
+                sessionid,ip1,ip2,ip3,ip4,v1,v2,v3,ileng = struct.unpack(">LBBBBHBBL",data[pos:pos+16])
+                ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
+                ver = "%d.%d.%d" % (v1,v2,v3)
+                pos+=16
+                info = data[pos:pos+ileng]
+                pos+=ileng
+                pleng = struct.unpack(">L",data[pos:pos+4])[0]
+                pos+=4
+                path = data[pos:pos+pleng]
+                pos+=pleng
+                if masterversion>=(1,6,0):
+                    pos+=17
+                else:
+                    pos+=9
+                stats_c = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
+                pos+=64
+                stats_l = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
+                pos+=64
+                try:
+                    host = (socket.gethostbyaddr(ipnum))[0]
+                except Exception:
+                    host = "(unresolved)"
+                if path!='.':
+                    servers.append((host,ipnum,info,stats_c,stats_l))
+        s.close()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+    return servers
+
 status = mfs_mounts()
 print status
 sys.exit(0)
