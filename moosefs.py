@@ -506,6 +506,44 @@ def mfs_disks(HDtime=max, HDperiod=min):
 
     return hdd
 
-status = mfs_disks()
+def mfs_exports():
+    servers = []
+    try:
+        s = socket.socket()
+        s.connect((masterhost,masterport))
+        mysend(s,struct.pack(">LL",520,0))
+        header = myrecv(s,8)
+        cmd,length = struct.unpack(">LL",header)
+        if cmd==521 and masterversion>=(1,5,14):
+            data = myrecv(s,length)
+            pos = 0
+            while pos<length:
+                fip1,fip2,fip3,fip4,tip1,tip2,tip3,tip4,pleng = struct.unpack(">BBBBBBBBL",data[pos:pos+12])
+                ipfrom = "%d.%d.%d.%d" % (fip1,fip2,fip3,fip4)
+                ipto = "%d.%d.%d.%d" % (tip1,tip2,tip3,tip4)
+                pos+=12
+                path = data[pos:pos+pleng]
+                pos+=pleng
+                if masterversion>=(1,6,1):
+                    v1,v2,v3,exportflags,sesflags,rootuid,rootgid,mapalluid,mapallgid = struct.unpack(">HBBBBLLLL",data[pos:pos+22])
+                    pos+=22
+                else:
+                    v1,v2,v3,exportflags,sesflags,rootuid,rootgid = struct.unpack(">HBBBBLL",data[pos:pos+14])
+                    mapalluid = 0
+                    mapallgid = 0
+                    pos+=14
+                ver = "%d.%d.%d" % (v1,v2,v3)
+                if path=='.':
+                    meta=1
+                else:
+                    meta=0
+                servers.append((ipfrom,ipto,path,meta,ver,exportflags,sesflags,rootuid,rootgid,mapalluid,mapallgid))
+        s.close()
+    except Exception:
+        traceback.print_exc(file=sys.stdout)
+
+    return servers
+
+status = mfs_exports()
 print status
 sys.exit(0)
