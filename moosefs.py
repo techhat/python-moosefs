@@ -474,30 +474,30 @@ def mfs_disks(HDtime=max, HDperiod=min):
                             else:
                                 percent_used = '-'
                             hdd.append({
-                                'ip_path': ip_path,
-                                'host_path': host_path,
-                                'flags': flags,
-                                'errchunkid': errchunkid,
-                                'errtime': errtime,
-                                'used': used,
-                                'total': total,
-                                'chunkscnt': chunkscnt,
-                                'rbw': rbw,
-                                'wbw': wbw,
-                                'rtime': rtime,
-                                'wtime': wtime,
-                                'fsynctime': fsynctime,
-                                'read_ops': rops,
-                                'write_ops': wops,
-                                'fsyncops': fsyncops,
-                                'read_bytes': rbytes,
-                                'write_bytes': wbytes,
-                                'usecreadsum': usecreadsum,
+                                'ip_path':      ip_path,
+                                'host_path':    host_path,
+                                'flags':        flags,
+                                'errchunkid':   errchunkid,
+                                'errtime':      errtime,
+                                'used':         used,
+                                'total':        total,
+                                'chunkscount':  chunkscnt,
+                                'rbw':          rbw,
+                                'wbw':          wbw,
+                                'rtime':        rtime,
+                                'wtime':        wtime,
+                                'fsynctime':    fsynctime,
+                                'read_ops':     rops,
+                                'write_ops':    wops,
+                                'fsyncops':     fsyncops,
+                                'read_bytes':   rbytes,
+                                'write_bytes':  wbytes,
+                                'usecreadsum':  usecreadsum,
                                 'usecwritesum': usecwritesum,
-                                'status': status,
-                                'lerror': lerror,
-                                'rbsize': rbsize,
-                                'wbsize': wbsize,
+                                'status':       status,
+                                'lerror':       lerror,
+                                'rbsize':       rbsize,
+                                'wbsize':       wbsize,
                                 'percent_used': percent_used,
                             })
                     s.close()
@@ -645,40 +645,80 @@ def mfs_operations():
         mysend(s,struct.pack(">LL",508,0))
         header = myrecv(s,8)
         cmd,length = struct.unpack(">LL",header)
-        if cmd==509 and masterversion>=(1,5,14):
+        if cmd == 509 and masterversion >= (1,5,14):
             data = myrecv(s,length)
             pos = 0
             while pos<length:
                 sessionid,ip1,ip2,ip3,ip4,v1,v2,v3,ileng = struct.unpack(">LBBBBHBBL",data[pos:pos+16])
                 ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
                 ver = "%d.%d.%d" % (v1,v2,v3)
-                pos+=16
+                pos += 16
                 info = data[pos:pos+ileng]
-                pos+=ileng
+                pos += ileng
                 pleng = struct.unpack(">L",data[pos:pos+4])[0]
-                pos+=4
+                pos += 4
                 path = data[pos:pos+pleng]
-                pos+=pleng
-                if masterversion>=(1,6,0):
-                    pos+=17
+                pos += pleng
+                if masterversion >= (1,6,0):
+                    pos += 17
                 else:
-                    pos+=9
+                    pos += 9
                 stats_c = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
-                pos+=64
+                pos += 64
                 stats_l = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
-                pos+=64
+                pos += 64
                 try:
                     host = (socket.gethostbyaddr(ipnum))[0]
                 except Exception:
                     host = "(unresolved)"
-                if path!='.':
-                    servers.append((host,ipnum,info,stats_c,stats_l))
+                if path != '.':
+                    servers.append( {
+                        'host':           host,
+                        'ip':             ipnum,
+                        'info':           info,
+                        'stats_current':  {
+                            'statfs':   stats_c[0],
+                            'getattr':  stats_c[1],
+                            'setattr':  stats_c[2],
+                            'lookup':   stats_c[3],
+                            'mkdir':    stats_c[4],
+                            'rmdir':    stats_c[5],
+                            'symlink':  stats_c[6],
+                            'readlink': stats_c[7],
+                            'mknod':    stats_c[8],
+                            'unlink':   stats_c[9],
+                            'rename':   stats_c[10],
+                            'link':     stats_c[11],
+                            'readdir':  stats_c[12],
+                            'open':     stats_c[13],
+                            'read':     stats_c[14],
+                            'write':    stats_c[15],
+                        },
+                        'stats_lasthour': {
+                            'statfs':   stats_l[0],
+                            'getattr':  stats_l[1],
+                            'setattr':  stats_l[2],
+                            'lookup':   stats_l[3],
+                            'mkdir':    stats_l[4],
+                            'rmdir':    stats_l[5],
+                            'symlink':  stats_l[6],
+                            'readlink': stats_l[7],
+                            'mknod':    stats_l[8],
+                            'unlink':   stats_l[9],
+                            'rename':   stats_l[10],
+                            'link':     stats_l[11],
+                            'readdir':  stats_l[12],
+                            'open':     stats_l[13],
+                            'read':     stats_l[14],
+                            'write':    stats_l[15],
+                        },
+                    } )
         s.close()
     except Exception:
         traceback.print_exc(file=sys.stdout)
 
     return servers
 
-status = mfs_mounts()
+status = mfs_operations()
 print status
 sys.exit(0)
