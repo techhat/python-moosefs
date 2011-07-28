@@ -629,7 +629,20 @@ def mfs_mounts():
                     host = (socket.gethostbyaddr(ipnum))[0]
                 except Exception:
                     host = "(unresolved)"
-                servers.append((sessionid,host,ipnum,info,ver,meta,path,sesflags,rootuid,rootgid,mapalluid,mapallgid))
+                servers.append( {
+                    'sessionid':     sessionid,
+                    'host':          host,
+                    'ip':            ipnum,
+                    'mount':         info,
+                    'version':       ver,
+                    'meta':          meta,
+                    'moose_path':    path,
+                    'flags':         sesflags,
+                    'root_uid':      rootuid,
+                    'root_gid':      rootgid,
+                    'all_users_uid': mapalluid,
+                    'all_users_gid': mapallgid,
+                } )
         s.close()
     except Exception:
         traceback.print_exc(file=sys.stdout)
@@ -719,6 +732,6 @@ def mfs_operations():
 
     return servers
 
-status = mfs_operations()
+status = mfs_mounts()
 print status
 sys.exit(0)
