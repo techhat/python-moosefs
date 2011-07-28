@@ -537,7 +537,19 @@ def mfs_exports():
                     meta=1
                 else:
                     meta=0
-                servers.append((ipfrom,ipto,path,meta,ver,exportflags,sesflags,rootuid,rootgid,mapalluid,mapallgid))
+                servers.append( {
+                    'ip_range_from': ipfrom,
+                    'ip_range_to':   ipto,
+                    'path':          path,
+                    'meta':          meta,
+                    'version':       ver,
+                    'export_flags':  exportflags,
+                    'ses_flags':     sesflags,
+                    'root_uid':      rootuid,
+                    'root_gid':      rootgid,
+                    'all_users_uid': mapalluid,
+                    'all_users_gid': mapallgid,
+                } )
         s.close()
     except Exception:
         traceback.print_exc(file=sys.stdout)
@@ -637,7 +649,7 @@ def mfs_mounts():
                     'version':       ver,
                     'meta':          meta,
                     'moose_path':    path,
-                    'flags':         sesflags,
+                    'ses_flags':     sesflags,
                     'root_uid':      rootuid,
                     'root_gid':      rootgid,
                     'all_users_uid': mapalluid,
@@ -732,6 +744,6 @@ def mfs_operations():
 
     return servers
 
-status = mfs_mounts()
+status = mfs_exports()
 print status
 sys.exit(0)
