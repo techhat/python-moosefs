@@ -38,18 +38,18 @@ class MooseFS():
     def check_master_version(self):
         masterversion = (0,0,0)
         s = socket.socket()
-        s.connect((self.masterhost,self.masterport))
+        s.connect((self.masterhost, self.masterport))
         self.mysend(s,struct.pack(">LL",510,0))
         header = self.myrecv(s,8)
-        cmd,length = struct.unpack(">LL",header)
-        data = self.myrecv(s,length)
+        cmd,length = struct.unpack(">LL", header)
+        data = self.myrecv(s, length)
         if cmd==511:
             if length==52:
                 masterversion = (1,4,0)
             elif length==60:
                 masterversion = (1,5,0)
             elif length==68:
-                masterversion = struct.unpack(">HBB",data[:4])
+                masterversion = struct.unpack(">HBB", data[:4])
         return masterversion
 
     def mfs_info(self, INmatrix=0):
@@ -57,13 +57,13 @@ class MooseFS():
         info = {}
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",510,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 510, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
             if cmd==511 and length==52:
-                data = self.myrecv(s,length)
-                total,avail,trspace,trfiles,respace,refiles,nodes,chunks,tdcopies = struct.unpack(">QQQLQLLLL",data)
+                data = self.myrecv(s, length)
+                total, avail, trspace, trfiles, respace, refiles, nodes, chunks, tdcopies = struct.unpack(">QQQLQLLLL", data)
                 info = {
                     'total_space':          total,
                     'avail_space':          avail,
@@ -76,8 +76,8 @@ class MooseFS():
                     'regular_chunk_copies': tdcopies,
                 }
             elif cmd==511 and length==60:
-                data = self.myrecv(s,length)
-                total,avail,trspace,trfiles,respace,refiles,nodes,dirs,files,chunks,tdcopies = struct.unpack(">QQQLQLLLLLL",data)
+                data = self.myrecv(s, length)
+                total, avail, trspace, trfiles, respace, refiles, nodes, dirs, files, chunks, tdcopies = struct.unpack(">QQQLQLLLLLL", data)
                 info = {
                     'total_space':          total,
                     'avail_space':          avail,
@@ -92,8 +92,8 @@ class MooseFS():
                     'regular_chunk_copies': tdcopies,
                 }
             elif cmd==511 and length==68:
-                data = self.myrecv(s,length)
-                v1,v2,v3,total,avail,trspace,trfiles,respace,refiles,nodes,dirs,files,chunks,allcopies,tdcopies = struct.unpack(">HBBQQQLQLLLLLLL",data)
+                data = self.myrecv(s, length)
+                v1, v2, v3, total, avail, trspace, trfiles, respace, refiles, nodes, dirs, files, chunks, allcopies, tdcopies = struct.unpack(">HBBQQQLQLLLLLLL", data)
                 ver = '.'.join([str(v1), str(v2), str(v3)])
                 info = {
                     'version':              ver,
@@ -120,22 +120,22 @@ class MooseFS():
     
         # All chunks state matrix
         matrix = []
-        if self.masterversion>=(1,5,13):
+        if self.masterversion>=(1, 5, 13):
             try:
                 s = socket.socket()
-                s.connect((self.masterhost,self.masterport))
-                if self.masterversion>=(1,6,10):
-                    self.mysend(s,struct.pack(">LLB",516,1,INmatrix))
+                s.connect((self.masterhost, self.masterport))
+                if self.masterversion>=(1, 6, 10):
+                    self.mysend(s, struct.pack(">LLB", 516, 1, INmatrix))
                 else:
-                    self.mysend(s,struct.pack(">LL",516,0))
-                header = self.myrecv(s,8)
-                cmd,length = struct.unpack(">LL",header)
+                    self.mysend(s, struct.pack(">LL", 516, 0))
+                header = self.myrecv(s, 8)
+                cmd, length = struct.unpack(">LL", header)
                 if cmd==517 and length==484:
                     # This will generate a matrix of goals, from 0 to 10+
                     # for both rows and columns. It does not include totals.
                     for i in xrange(11):
-                        data = self.myrecv(s,44)
-                        matrix.append(list(struct.unpack(">LLLLLLLLLLL",data)))
+                        data = self.myrecv(s, 44)
+                        matrix.append(list(struct.unpack(">LLLLLLLLLLL", data)))
                 s.close()
             except Exception:
                 traceback.print_exc(file=sys.stdout)
@@ -144,13 +144,13 @@ class MooseFS():
         chunk_info = {}
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",514,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 514, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
             if cmd==515 and length==52:
-                data = self.myrecv(s,length)
-                loopstart,loopend,del_invalid,ndel_invalid,del_unused,ndel_unused,del_dclean,ndel_dclean,del_ogoal,ndel_ogoal,rep_ugoal,nrep_ugoal,rebalnce = struct.unpack(">LLLLLLLLLLLLL",data[:52])
+                data = self.myrecv(s, length)
+                loopstart, loopend, del_invalid, ndel_invalid, del_unused, ndel_unused, del_dclean, ndel_dclean, del_ogoal, ndel_ogoal, rep_ugoal, nrep_ugoal, rebalnce = struct.unpack(">LLLLLLLLLLLLL", data[:52])
             chunk_info = {
                 'loop_start':                     loopstart,
                 'loop_end':                       loopend,
@@ -175,13 +175,13 @@ class MooseFS():
         try:
             out = []
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",512,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 512, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
             if cmd==513 and length>=36:
-                data = self.myrecv(s,length)
-                loopstart,loopend,files,ugfiles,mfiles,chunks,ugchunks,mchunks,msgbuffleng = struct.unpack(">LLLLLLLLL",data[:36])
+                data = self.myrecv(s, length)
+                loopstart, loopend, files, ugfiles, mfiles, chunks, ugchunks, mchunks, msgbuffleng = struct.unpack(">LLLLLLLLL", data[:36])
                 messages = ''
                 truncated = ''
                 if loopstart>0:
@@ -222,19 +222,19 @@ class MooseFS():
         servers = []
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",500,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd==501 and self.masterversion>=(1,5,13) and (length%54)==0:
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 500, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd==501 and self.masterversion>=(1, 5, 13) and (length%54)==0:
+                data = self.myrecv(s, length)
                 n = length/54
                 for i in xrange(n):
                     d = data[i*54:(i+1)*54]
-                    v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
+                    v1, v2, v3, ip1, ip2, ip3, ip4, port, used, total, chunks, tdused, tdtotal, tdchunks, errcnt = struct.unpack(">HBBBBBBHQQLQQLL", d)
                     host = ''
                     try:
-                        host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                        host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1, ip2, ip3, ip4)))[0]
                     except Exception:
                         host = "(unresolved)"
                     ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
@@ -264,14 +264,14 @@ class MooseFS():
                         'tdpercent_used': tdpercent_used,
                         'errcount':       errcnt,
                     })
-            elif cmd==501 and self.masterversion<(1,5,13) and (length%50)==0:
-                data = self.myrecv(s,length)
+            elif cmd==501 and self.masterversion<(1, 5, 13) and (length%50)==0:
+                data = self.myrecv(s, length)
                 n = length/50
                 for i in xrange(n):
                     d = data[i*50:(i+1)*50]
-                    ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">BBBBHQQLQQLL",d)
+                    ip1, ip2, ip3, ip4, port, used, total, chunks, tdused, tdtotal, tdchunks, errcnt = struct.unpack(">BBBBHQQLQQLL", d)
                     try:
-                        host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                        host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1, ip2, ip3, ip4)))[0]
                     except Exception:
                         host = "(unresolved)"
                     ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
@@ -305,26 +305,26 @@ class MooseFS():
     
         # Metadata backup loggers
         mbloggers = []
-        if self.masterversion>=(1,6,5):
+        if self.masterversion>=(1, 6, 5):
             try:
                 s = socket.socket()
-                s.connect((self.masterhost,self.masterport))
-                self.mysend(s,struct.pack(">LL",522,0))
-                header = self.myrecv(s,8)
-                cmd,length = struct.unpack(">LL",header)
+                s.connect((self.masterhost, self.masterport))
+                self.mysend(s, struct.pack(">LL", 522, 0))
+                header = self.myrecv(s, 8)
+                cmd, length = struct.unpack(">LL", header)
                 if cmd==523 and (length%8)==0:
-                    data = self.myrecv(s,length)
+                    data = self.myrecv(s, length)
                     n = length/8
                     for i in xrange(n):
                         d = data[i*8:(i+1)*8]
-                        v1,v2,v3,ip1,ip2,ip3,ip4 = struct.unpack(">HBBBBBB",d)
+                        v1, v2, v3, ip1, ip2, ip3, ip4 = struct.unpack(">HBBBBBB", d)
                         ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
                         ver = '.'.join([str(v1), str(v2), str(v3)])
                         try:
-                            host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)))[0]
+                            host = (socket.gethostbyaddr("%u.%u.%u.%u" % (ip1, ip2, ip3, ip4)))[0]
                         except Exception:
                             host = "(unresolved)"
-                        mbloggers.append((host,ip,ver))
+                        mbloggers.append((host, ip, ver))
                 s.close()
             except Exception:
                 traceback.print_exc(file=sys.stdout)
@@ -341,87 +341,87 @@ class MooseFS():
             # get cs list
             hostlist = []
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",500,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd==501 and self.masterversion>=(1,5,13) and (length%54)==0:
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 500, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd==501 and self.masterversion>=(1, 5, 13) and (length%54)==0:
+                data = self.myrecv(s, length)
                 n = length/54
                 servers = []
                 for i in xrange(n):
                     d = data[i*54:(i+1)*54]
-                    v1,v2,v3,ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">HBBBBBBHQQLQQLL",d)
-                    hostlist.append((v1,v2,v3,ip1,ip2,ip3,ip4,port))
-            elif cmd==501 and self.masterversion<(1,5,13) and (length%50)==0:
-                data = self.myrecv(s,length)
+                    v1, v2, v3, ip1, ip2, ip3, ip4, port, used, total, chunks, tdused, tdtotal, tdchunks, errcnt = struct.unpack(">HBBBBBBHQQLQQLL", d)
+                    hostlist.append((v1, v2, v3, ip1, ip2, ip3, ip4, port))
+            elif cmd==501 and self.masterversion<(1, 5, 13) and (length%50)==0:
+                data = self.myrecv(s, length)
                 n = length/50
                 servers = []
                 for i in xrange(n):
                     d = data[i*50:(i+1)*50]
-                    ip1,ip2,ip3,ip4,port,used,total,chunks,tdused,tdtotal,tdchunks,errcnt = struct.unpack(">BBBBHQQLQQLL",d)
-                    hostlist.append((1,5,0,ip1,ip2,ip3,ip4,port))
+                    ip1, ip2, ip3, ip4, port, used, total, chunks, tdused, tdtotal, tdchunks, errcnt = struct.unpack(">BBBBHQQLQQLL", d)
+                    hostlist.append((1, 5, 0, ip1, ip2, ip3, ip4, port))
             s.close()
     
             # get hdd lists one by one
             hdd = []
-            for v1,v2,v3,ip1,ip2,ip3,ip4,port in hostlist:
-                hostip = "%u.%u.%u.%u" % (ip1,ip2,ip3,ip4)
+            for v1, v2, v3, ip1, ip2, ip3, ip4, port in hostlist:
+                hostip = "%u.%u.%u.%u" % (ip1, ip2, ip3, ip4)
                 try:
                     hoststr = (socket.gethostbyaddr(hostip))[0]
                 except Exception:
                     hoststr = "(unresolved)"
                 if port>0:
-                    if (v1,v2,v3)<=(1,6,8):
+                    if (v1, v2, v3) <= (1, 6, 8):
                         s = socket.socket()
-                        s.connect((hostip,port))
-                        self.mysend(s,struct.pack(">LL",502,0))
+                        s.connect((hostip, port))
+                        self.mysend(s, struct.pack(">LL", 502, 0))
                         header = self.myrecv(s,8)
-                        cmd,length = struct.unpack(">LL",header)
+                        cmd, length = struct.unpack(">LL", header)
                         if cmd==503:
-                            data = self.myrecv(s,length)
+                            data = self.myrecv(s, length)
                             while length>0:
                                 plen = ord(data[0])
-                                host_path = "%s:%u:%s" % (hoststr,port,data[1:plen+1])
-                                ip_path = "%s:%u:%s" % (hostip,port,data[1:plen+1])
-                                flags,errchunkid,errtime,used,total,chunkscnt = struct.unpack(">BQLQQL",data[plen+1:plen+34])
+                                host_path = "%s:%u:%s" % (hoststr, port, data[1:plen+1])
+                                ip_path = "%s:%u:%s" % (hostip, port, data[1:plen+1])
+                                flags, errchunkid, errtime, used, total, chunkscnt = struct.unpack(">BQLQQL", data[plen+1:plen+34])
                                 length -= plen+34
                                 data = data[plen+34:]
-                                hdd.append((ip_path,host_path,flags,errchunkid,errtime,used,total,chunkscnt,0,0,0,0,0,0,0,0,0,0,0,0))
+                                hdd.append((ip_path, host_path, flags, errchunkid, errtime, used, total, chunkscnt, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
                         s.close()
                     else:
                         s = socket.socket()
-                        s.connect((hostip,port))
-                        self.mysend(s,struct.pack(">LL",600,0))
-                        header = self.myrecv(s,8)
-                        cmd,length = struct.unpack(">LL",header)
+                        s.connect((hostip, port))
+                        self.mysend(s, struct.pack(">LL", 600, 0))
+                        header = self.myrecv(s, 8)
+                        cmd, length = struct.unpack(">LL", header)
                         if cmd==601:
-                            data = self.myrecv(s,length)
+                            data = self.myrecv(s, length)
                             while length>0:
-                                entrysize = struct.unpack(">H",data[:2])[0]
+                                entrysize = struct.unpack(">H", data[:2])[0]
                                 entry = data[2:2+entrysize]
                                 data = data[2+entrysize:]
                                 length -= 2+entrysize;
     
                                 plen = ord(entry[0])
-                                host_path = "%s:%u:%s" % (hoststr,port,entry[1:plen+1])
-                                ip_path = "%s:%u:%s" % (hostip,port,entry[1:plen+1])
-                                flags,errchunkid,errtime,used,total,chunkscnt = struct.unpack(">BQLQQL",entry[plen+1:plen+34])
-                                rbytes,wbytes,usecreadsum,usecwritesum,usecfsyncsum,rops,wops,fsyncops,usecreadmax,usecwritemax,usecfsyncmax = (0,0,0,0,0,0,0,0,0,0,0)
+                                host_path = "%s:%u:%s" % (hoststr, port, entry[1:plen+1])
+                                ip_path = "%s:%u:%s" % (hostip, port, entry[1:plen+1])
+                                flags, errchunkid, errtime, used, total, chunkscnt = struct.unpack(">BQLQQL", entry[plen+1:plen+34])
+                                rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
                                 if entrysize==plen+34+144:
                                     if HDperiod == 'min':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,rops,wops,usecreadmax,usecwritemax = struct.unpack(">QQQQLLLL",entry[plen+34:plen+34+48])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack(">QQQQLLLL", entry[plen+34:plen+34+48])
                                     elif HDperiod == 'hour':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,rops,wops,usecreadmax,usecwritemax = struct.unpack(">QQQQLLLL",entry[plen+34+48:plen+34+96])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack(">QQQQLLLL", entry[plen+34+48:plen+34+96])
                                     elif HDperiod == 'day':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,rops,wops,usecreadmax,usecwritemax = struct.unpack(">QQQQLLLL",entry[plen+34+96:plen+34+144])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack(">QQQQLLLL", entry[plen+34+96:plen+34+144])
                                 elif entrysize==plen+34+192:
                                     if HDperiod == 'min':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,usecfsyncsum,rops,wops,fsyncops,usecreadmax,usecwritemax,usecfsyncmax = struct.unpack(">QQQQQLLLLLL",entry[plen+34:plen+34+64])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack(">QQQQQLLLLLL", entry[plen+34:plen+34+64])
                                     elif HDperiod == 'hour':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,usecfsyncsum,rops,wops,fsyncops,usecreadmax,usecwritemax,usecfsyncmax = struct.unpack(">QQQQQLLLLLL",entry[plen+34+64:plen+34+128])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack(">QQQQQLLLLLL", entry[plen+34+64:plen+34+128])
                                     elif HDperiod == 'day':
-                                        rbytes,wbytes,usecreadsum,usecwritesum,usecfsyncsum,rops,wops,fsyncops,usecreadmax,usecwritemax,usecfsyncmax = struct.unpack(">QQQQQLLLLLL",entry[plen+34+128:plen+34+192])
+                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack(">QQQQQLLLLLL", entry[plen+34+128:plen+34+192])
                                 if usecreadsum>0:
                                     rbw = rbytes*1000000/usecreadsum
                                 else:
@@ -448,14 +448,14 @@ class MooseFS():
                                     wtime = usecwritemax
                                     fsynctime = usecfsyncmax
                                 if flags == 1:
-                                    if self.masterversion>=(1,6,10):
+                                    if self.masterversion>=(1, 6, 10):
                                         status = 'marked for removal'
                                     else:
                                         status = 'to be empty'
                                 elif flags == 2:
                                     status = 'damaged'
                                 elif flags == 3:
-                                    if self.masterversion>=(1,6,10):
+                                    if self.masterversion>=(1, 6, 10):
                                         status = 'damaged, marked for removal'
                                     else:
                                         status = 'damaged, to be empty'
@@ -514,29 +514,29 @@ class MooseFS():
         servers = []
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",520,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd==521 and self.masterversion>=(1,5,14):
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 520, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd==521 and self.masterversion>=(1, 5, 14):
+                data = self.myrecv(s, length)
                 pos = 0
                 while pos<length:
-                    fip1,fip2,fip3,fip4,tip1,tip2,tip3,tip4,pleng = struct.unpack(">BBBBBBBBL",data[pos:pos+12])
-                    ipfrom = "%d.%d.%d.%d" % (fip1,fip2,fip3,fip4)
-                    ipto = "%d.%d.%d.%d" % (tip1,tip2,tip3,tip4)
+                    fip1, fip2, fip3, fip4, tip1, tip2, tip3, tip4, pleng = struct.unpack(">BBBBBBBBL", data[pos:pos+12])
+                    ipfrom = "%d.%d.%d.%d" % (fip1, fip2, fip3, fip4)
+                    ipto = "%d.%d.%d.%d" % (tip1,  tip2, tip3, tip4)
                     pos+=12
                     path = data[pos:pos+pleng]
                     pos+=pleng
-                    if self.masterversion>=(1,6,1):
-                        v1,v2,v3,exportflags,sesflags,rootuid,rootgid,mapalluid,mapallgid = struct.unpack(">HBBBBLLLL",data[pos:pos+22])
+                    if self.masterversion>=(1, 6, 1):
+                        v1, v2, v3, exportflags, sesflags, rootuid, rootgid, mapalluid, mapallgid = struct.unpack(">HBBBBLLLL", data[pos:pos+22])
                         pos+=22
                     else:
-                        v1,v2,v3,exportflags,sesflags,rootuid,rootgid = struct.unpack(">HBBBBLL",data[pos:pos+14])
+                        v1, v2, v3, exportflags, sesflags, rootuid, rootgid = struct.unpack(">HBBBBLL", data[pos:pos+14])
                         mapalluid = 0
                         mapallgid = 0
                         pos+=14
-                    ver = "%d.%d.%d" % (v1,v2,v3)
+                    ver = "%d.%d.%d" % (v1, v2, v3)
                     if path=='.':
                         meta=1
                     else:
@@ -569,20 +569,20 @@ class MooseFS():
     
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",508,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd==509 and self.masterversion<=(1,5,13) and (length%136)==0:
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 508, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd==509 and self.masterversion<=(1, 5, 13) and (length%136)==0:
+                data = self.myrecv(s, length)
                 n = length/136
                 for i in xrange(n):
                     d = data[i*136:(i+1)*136]
                     addrdata = d[0:8]
                     stats_c = []
                     stats_l = []
-                    ip1,ip2,ip3,ip4,spare,v1,v2,v3 = struct.unpack(">BBBBBBBB",addrdata)
-                    ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
+                    ip1, ip2, ip3, ip4, spare, v1, v2, v3 = struct.unpack(">BBBBBBBB", addrdata)
+                    ipnum = "%d.%d.%d.%d" % (ip1, ip2, ip3, ip4)
                     if v1==0 and v2==0:
                         if v3==2:
                             ver = "1.3.x"
@@ -591,15 +591,15 @@ class MooseFS():
                         else:
                             ver = "unknown"
                     else:
-                        ver = "%d.%d.%d" % (v1,v2,v3)
+                        ver = "%d.%d.%d" % (v1, v2, v3)
                     for i in xrange(16):
-                        stats_c.append(struct.unpack(">L",d[i*4+8:i*4+12]))
-                        stats_l.append(struct.unpack(">L",d[i*4+72:i*4+76]))
+                        stats_c.append(struct.unpack(">L", d[i*4+8:i*4+12]))
+                        stats_l.append(struct.unpack(">L", d[i*4+72:i*4+76]))
                     try:
                         host = (socket.gethostbyaddr(ipnum))[0]
                     except Exception:
                         host = "(unresolved)"
-                    servers.append((host,ipnum,ver,stats_c,stats_l))
+                    servers.append((host, ipnum, ver, stats_c, stats_l))
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
@@ -611,29 +611,29 @@ class MooseFS():
     
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",508,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd==509 and self.masterversion>=(1,5,14):
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 508, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd==509 and self.masterversion>=(1, 5, 14):
+                data = self.myrecv(s, length)
                 pos = 0
                 while pos<length:
-                    sessionid,ip1,ip2,ip3,ip4,v1,v2,v3,ileng = struct.unpack(">LBBBBHBBL",data[pos:pos+16])
-                    ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
-                    ver = "%d.%d.%d" % (v1,v2,v3)
+                    sessionid, ip1, ip2, ip3, ip4, v1, v2, v3, ileng = struct.unpack(">LBBBBHBBL", data[pos:pos+16])
+                    ipnum = "%d.%d.%d.%d" % (ip1, ip2, ip3, ip4)
+                    ver = "%d.%d.%d" % (v1, v2, v3)
                     pos+=16
                     info = data[pos:pos+ileng]
                     pos+=ileng
-                    pleng = struct.unpack(">L",data[pos:pos+4])[0]
+                    pleng = struct.unpack(">L", data[pos:pos+4])[0]
                     pos+=4
                     path = data[pos:pos+pleng]
                     pos+=pleng
-                    if self.masterversion>=(1,6,1):
-                        sesflags,rootuid,rootgid,mapalluid,mapallgid = struct.unpack(">BLLLL",data[pos:pos+17])
+                    if self.masterversion>=(1, 6, 1):
+                        sesflags, rootuid, rootgid, mapalluid, mapallgid = struct.unpack(">BLLLL", data[pos:pos+17])
                         pos+=145  # 17+64+64 - skip stats
                     else:
-                        sesflags,rootuid,rootgid = struct.unpack(">BLL",data[pos:pos+9])
+                        sesflags, rootuid, rootgid = struct.unpack(">BLL", data[pos:pos+9])
                         mapalluid = 0
                         mapallgid = 0
                         pos+=137  # 9+64+64 - skip stats
@@ -670,31 +670,31 @@ class MooseFS():
     
         try:
             s = socket.socket()
-            s.connect((self.masterhost,self.masterport))
-            self.mysend(s,struct.pack(">LL",508,0))
-            header = self.myrecv(s,8)
-            cmd,length = struct.unpack(">LL",header)
-            if cmd == 509 and self.masterversion >= (1,5,14):
-                data = self.myrecv(s,length)
+            s.connect((self.masterhost, self.masterport))
+            self.mysend(s, struct.pack(">LL", 508, 0))
+            header = self.myrecv(s, 8)
+            cmd, length = struct.unpack(">LL", header)
+            if cmd == 509 and self.masterversion >= (1, 5, 14):
+                data = self.myrecv(s, length)
                 pos = 0
                 while pos<length:
-                    sessionid,ip1,ip2,ip3,ip4,v1,v2,v3,ileng = struct.unpack(">LBBBBHBBL",data[pos:pos+16])
-                    ipnum = "%d.%d.%d.%d" % (ip1,ip2,ip3,ip4)
-                    ver = "%d.%d.%d" % (v1,v2,v3)
+                    sessionid, ip1, ip2, ip3, ip4, v1, v2, v3, ileng = struct.unpack(">LBBBBHBBL", data[pos:pos+16])
+                    ipnum = "%d.%d.%d.%d" % (ip1, ip2, ip3, ip4)
+                    ver = "%d.%d.%d" % (v1, v2, v3)
                     pos += 16
                     info = data[pos:pos+ileng]
                     pos += ileng
-                    pleng = struct.unpack(">L",data[pos:pos+4])[0]
+                    pleng = struct.unpack(">L", data[pos:pos+4])[0]
                     pos += 4
                     path = data[pos:pos+pleng]
                     pos += pleng
-                    if self.masterversion >= (1,6,0):
+                    if self.masterversion >= (1, 6, 0):
                         pos += 17
                     else:
                         pos += 9
-                    stats_c = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
+                    stats_c = struct.unpack(">LLLLLLLLLLLLLLLL", data[pos:pos+64])
                     pos += 64
-                    stats_l = struct.unpack(">LLLLLLLLLLLLLLLL",data[pos:pos+64])
+                    stats_l = struct.unpack(">LLLLLLLLLLLLLLLL", data[pos:pos+64])
                     pos += 64
                     try:
                         host = (socket.gethostbyaddr(ipnum))[0]
