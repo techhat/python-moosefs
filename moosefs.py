@@ -24,17 +24,17 @@ class MooseFS():
             sent = socket.send(msg[totalsent:])
             if sent == 0:
                 raise RuntimeError("socket connection broken")
-            totalsent = totalsent + sent 
-    
+            totalsent = totalsent + sent
+
     def myrecv(self, socket, leng):
-        msg = '' 
+        msg = ''
         while len(msg) < leng:
             chunk = socket.recv(leng-len(msg))
             if chunk == '':
                 raise RuntimeError("socket connection broken")
             msg = msg + chunk
         return msg
-    
+
     def check_master_version(self):
         masterversion = (0, 0, 0)
         s = socket.socket()
@@ -137,7 +137,7 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         # All chunks state matrix
         matrix = []
         if self.masterversion >= (1, 5, 13):
@@ -159,7 +159,7 @@ class MooseFS():
                 s.close()
             except Exception:
                 traceback.print_exc(file=sys.stdout)
-    
+
         # Chunk operations info
         chunk_info = {}
         try:
@@ -189,7 +189,7 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         # Filesystem check info
         check_info = {}
         try:
@@ -228,7 +228,7 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         ret = {
             'info': info,
             'matrix': matrix,
@@ -236,7 +236,7 @@ class MooseFS():
             'check_info': check_info,
         }
         return ret
-    
+
     def mfs_servers(self):
         servers = []
         try:
@@ -321,7 +321,7 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         # Metadata backup loggers
         mbloggers = []
         if self.masterversion >= (1, 6, 5):
@@ -352,8 +352,8 @@ class MooseFS():
             'metadata_backup_loggers': mbloggers,
         }
         return ret
-    
-    def mfs_disks(self, HDtime=max, HDperiod=min):
+
+    def mfs_disks(self, HDtime='max', HDperiod='min'):
         # HDtime can be avg or max
         # HDperiod can be min, hour or day
         try:
@@ -381,7 +381,7 @@ class MooseFS():
                     ip1, ip2, ip3, ip4, port, used, total, chunks, tdused, tdtotal, tdchunks, errcnt = struct.unpack(">BBBBHQQLQQLL", d)
                     hostlist.append((1, 5, 0, ip1, ip2, ip3, ip4, port))
             s.close()
-    
+
             # get hdd lists one by one
             hdd = []
             for v1, v2, v3, ip1, ip2, ip3, ip4, port in hostlist:
@@ -421,7 +421,7 @@ class MooseFS():
                                 entry = data[2:2+entrysize]
                                 data = data[2+entrysize:]
                                 length -= 2 + entrysize
-    
+
                                 plen = ord(entry[0])
                                 host_path = "%s:%u:%s" % (hoststr, port, entry[1:plen+1])
                                 ip_path = "%s:%u:%s" % (hostip, port, entry[1:plen+1])
@@ -492,7 +492,7 @@ class MooseFS():
                                     wbsize = wbytes / wops
                                 else:
                                     wbsize = 0
-                                if (total >0 ): 
+                                if (total >0 ):
                                     percent_used = (used * 100.0) / total
                                 else:
                                     percent_used = '-'
@@ -526,9 +526,9 @@ class MooseFS():
                         s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         return hdd
-    
+
     def mfs_exports(self):
         servers = []
         try:
@@ -579,16 +579,16 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         return servers
-    
+
     def mfs_mountl(self):
         # This section appeared in the original mfs.cgi,
         # but doesn't actually show up in the browser.
         # An old version of section MS, perhaps?
         # I have left it here for historical reasons.
         servers = []
-    
+
         try:
             s = socket.socket()
             s.connect((self.masterhost, self.masterport))
@@ -625,12 +625,12 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         return servers
-    
+
     def mfs_mounts(self):
         servers = []
-    
+
         try:
             s = socket.socket()
             s.connect((self.masterhost, self.masterport))
@@ -718,12 +718,12 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         return servers
-    
+
     def mfs_operations(self):
         servers = []
-    
+
         try:
             s = socket.socket()
             s.connect((self.masterhost, self.masterport))
@@ -818,5 +818,5 @@ class MooseFS():
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
-    
+
         return servers
