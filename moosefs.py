@@ -393,14 +393,14 @@ class MooseFS():
                 if port > 0:
                     if (v1, v2, v3) <= (1, 6, 8):
                         s = socket.socket()
-			# If the host is down, so the socket package will raise a exception.
-			# if we catch the exception, then the module will not break with an 
-			# "can not connect" error.
-			try:
+                        # If the host is down, so the socket package will raise a exception.
+                        # if we catch the exception, then the module will not break with an 
+                        # "can not connect" error.
+                        try:
                             s.connect((hostip, port))
-			except Exception:
-			    # we will not handle the exception, we simple step over the host.
-			    continue 
+                        except Exception:
+                            # we will not handle the exception, we simple step over the host.
+                            continue 
                         self.mysend(s, struct.pack(">LL", 502, 0))
                         header = self.myrecv(s, 8)
                         cmd, length = struct.unpack(">LL", header)
@@ -417,14 +417,14 @@ class MooseFS():
                         s.close()
                     else:
                         s = socket.socket()
-			# If the host is down, so the socket package will raise a exception.
-			# if we catch the exception, then the module will not break with an 
-			# "can not connect" error.
-			try:
+                        # If the host is down, so the socket package will raise a exception.
+                        # if we catch the exception, then the module will not break with an 
+                        # "can not connect" error.
+                        try:
                             s.connect((hostip, port))
-			except Exception:
-			    # we will not handle the exception, we simple step over the host.
-			    continue 
+                        except Exception:
+                            # we will not handle the exception, we simple step over the host.
+                            continue 
                         self.mysend(s, struct.pack(">LL", 600, 0))
                         header = self.myrecv(s, 8)
                         cmd, length = struct.unpack(">LL", header)
