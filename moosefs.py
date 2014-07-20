@@ -13,7 +13,7 @@ class MooseFS():
     Class for querying MooseFS
     """
 
-    def __init__(self, masterhost='mfsmaster', masterport=9421 ):
+    def __init__(self, masterhost='mfsmaster', masterport=9421):
         self.masterhost = masterhost
         self.masterport = masterport
         self.masterversion = self.check_master_version()
@@ -259,12 +259,12 @@ class MooseFS():
                     ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
                     ver = '.'.join([str(v1), str(v2), str(v3)])
                     percent_used = ''
-                    if (total>0):
+                    if total > 0:
                         percent_used = (used*100.0)/total
                     else:
                         percent_used = '-'
                     tdpercent_used = ''
-                    if (tdtotal>0):
+                    if tdtotal > 0:
                         tdpercent_used = (tdused*100.0)/tdtotal
                     else:
                         tdpercent_used = ''
@@ -295,12 +295,12 @@ class MooseFS():
                         host = "(unresolved)"
                     ip = '.'.join([str(ip1), str(ip2), str(ip3), str(ip4)])
                     percent_used = ''
-                    if (total>0):
+                    if total > 0:
                         percent_used = (used*100.0)/total
                     else:
                         percent_used = '-'
                     tdpercent_used = ''
-                    if (tdtotal>0):
+                    if tdtotal > 0:
                         tdpercent_used = (tdused*100.0)/tdtotal
                     else:
                         tdpercent_used = ''
@@ -348,7 +348,7 @@ class MooseFS():
             except Exception:
                 traceback.print_exc(file=sys.stdout)
         ret = {
-            'servers':                 servers,
+            'servers': servers,
             'metadata_backup_loggers': mbloggers,
         }
         return ret
@@ -394,13 +394,13 @@ class MooseFS():
                     if (v1, v2, v3) <= (1, 6, 8):
                         s = socket.socket()
                         # If the host is down, so the socket package will raise a exception.
-                        # if we catch the exception, then the module will not break with an 
+                        # if we catch the exception, then the module will not break with an
                         # "can not connect" error.
                         try:
                             s.connect((hostip, port))
                         except Exception:
                             # we will not handle the exception, we simple step over the host.
-                            continue 
+                            continue
                         self.mysend(s, struct.pack(">LL", 502, 0))
                         header = self.myrecv(s, 8)
                         cmd, length = struct.unpack(">LL", header)
@@ -418,13 +418,13 @@ class MooseFS():
                     else:
                         s = socket.socket()
                         # If the host is down, so the socket package will raise a exception.
-                        # if we catch the exception, then the module will not break with an 
+                        # if we catch the exception, then the module will not break with an
                         # "can not connect" error.
                         try:
                             s.connect((hostip, port))
                         except Exception:
                             # we will not handle the exception, we simple step over the host.
-                            continue 
+                            continue
                         self.mysend(s, struct.pack(">LL", 600, 0))
                         header = self.myrecv(s, 8)
                         cmd, length = struct.unpack(">LL", header)
@@ -506,7 +506,7 @@ class MooseFS():
                                     wbsize = wbytes / wops
                                 else:
                                     wbsize = 0
-                                if (total >0 ):
+                                if total > 0:
                                     percent_used = (used * 100.0) / total
                                 else:
                                     percent_used = '-'
@@ -557,7 +557,7 @@ class MooseFS():
                 while pos < length:
                     fip1, fip2, fip3, fip4, tip1, tip2, tip3, tip4, pleng = struct.unpack(">BBBBBBBBL", data[pos:pos+12])
                     ipfrom = "%d.%d.%d.%d" % (fip1, fip2, fip3, fip4)
-                    ipto = "%d.%d.%d.%d" % (tip1,  tip2, tip3, tip4)
+                    ipto = "%d.%d.%d.%d" % (tip1, tip2, tip3, tip4)
                     pos += 12
                     path = data[pos:pos+pleng]
                     pos += pleng
@@ -577,7 +577,7 @@ class MooseFS():
                         meta = 1
                     else:
                         meta = 0
-                    servers.append( {
+                    servers.append({
                         'ip_range_from': ipfrom,
                         'ip_range_to':   ipto,
                         'path':          path,
@@ -589,7 +589,7 @@ class MooseFS():
                         'root_gid':      rootgid,
                         'all_users_uid': mapalluid,
                         'all_users_gid': mapallgid,
-                    } )
+                    })
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
@@ -711,7 +711,7 @@ class MooseFS():
                         host = (socket.gethostbyaddr(ipnum))[0]
                     except Exception:
                         host = "(unresolved)"
-                    servers.append( {
+                    servers.append({
                         'sessionid':     sessionid,
                         'host':          host,
                         'ip':            ipnum,
@@ -728,7 +728,7 @@ class MooseFS():
                         'maxgoal':       maxgoal,
                         'mintrashtime':  mintrashtime,
                         'maxtrashtime':  maxtrashtime,
-                    } )
+                    })
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
@@ -786,7 +786,7 @@ class MooseFS():
                     except Exception:
                         host = "(unresolved)"
                     if path != '.':
-                        servers.append( {
+                        servers.append({
                             'host':           host,
                             'ip':             ipnum,
                             'info':           info,
@@ -828,7 +828,7 @@ class MooseFS():
                                 'read':     stats_l[14],
                                 'write':    stats_l[15],
                             },
-                        } )
+                        })
             s.close()
         except Exception:
             traceback.print_exc(file=sys.stdout)
