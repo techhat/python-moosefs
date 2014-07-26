@@ -501,24 +501,65 @@ class MooseFS():
                                     )
                                 if entrysize == plen + 34 + 144:
                                     if HDperiod == 'min':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack('>QQQQLLLL', entry[plen+34:plen+34+48])
+                                        rbytes, wbytes, usecreadsum, \
+                                            usecwritesum, rops, wops, \
+                                            usecreadmax, \
+                                            usecwritemax = struct.unpack(
+                                            '>QQQQLLLL',
+                                            entry[plen+34:plen+34+48]
+                                        )
                                     elif HDperiod == 'hour':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack('>QQQQLLLL', entry[plen+34+48:plen+34+96])
+                                        rbytes, wbytes, usecreadsum, \
+                                            usecwritesum, rops, wops, \
+                                            usecreadmax, \
+                                            usecwritemax = struct.unpack(
+                                                '>QQQQLLLL',
+                                                entry[plen+34+48:plen+34+96]
+                                            )
                                     elif HDperiod == 'day':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, rops, wops, usecreadmax, usecwritemax = struct.unpack('>QQQQLLLL', entry[plen+34+96:plen+34+144])
+                                        rbytes, wbytes, usecreadsum, \
+                                            usecwritesum, rops, wops, \
+                                            usecreadmax, \
+                                            usecwritemax = struct.unpack(
+                                                '>QQQQLLLL',
+                                                entry[plen+34+96:plen+34+144]
+                                            )
                                 elif entrysize == plen + 34 + 192:
                                     if HDperiod == 'min':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack('>QQQQQLLLLLL', entry[plen+34:plen+34+64])
+                                        rbytes, wbytes, usecreadsum, \
+                                            usecwritesum, usecfsyncsum, rops, \
+                                            wops, fsyncops, usecreadmax, \
+                                            usecwritemax, \
+                                            usecfsyncmax = struct.unpack(
+                                                '>QQQQQLLLLLL',
+                                                entry[plen+34:plen+34+64]
+                                            )
                                     elif HDperiod == 'hour':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack('>QQQQQLLLLLL', entry[plen+34+64:plen+34+128])
+                                        rbytes, wbytes, usecreadsum, \
+                                            usecwritesum, usecfsyncsum, rops, \
+                                            wops, fsyncops, usecreadmax, \
+                                            usecwritemax, \
+                                            usecfsyncmax = struct.unpack(
+                                                '>QQQQQLLLLLL',
+                                                entry[plen+34+64:plen+34+128]
+                                            )
                                     elif HDperiod == 'day':
-                                        rbytes, wbytes, usecreadsum, usecwritesum, usecfsyncsum, rops, wops, fsyncops, usecreadmax, usecwritemax, usecfsyncmax = struct.unpack('>QQQQQLLLLLL', entry[plen+34+128:plen+34+192])
+                                        rbytes, wbytes, usecreadsum, \
+                                        usecwritesum, usecfsyncsum, rops, \
+                                        wops, fsyncops, usecreadmax, \
+                                        usecwritemax, \
+                                        usecfsyncmax = struct.unpack(
+                                            '>QQQQQLLLLLL',
+                                            entry[plen+34+128:plen+34+192]
+                                        )
                                 if usecreadsum > 0:
                                     rbw = rbytes * 1000000 / usecreadsum
                                 else:
                                     rbw = 0
                                 if usecwritesum + usecfsyncsum > 0:
-                                    wbw = wbytes *1000000 / (usecwritesum + usecfsyncsum)
+                                    wbw = wbytes *1000000 / (
+                                        usecwritesum + usecfsyncsum
+                                    )
                                 else:
                                     wbw = 0
                                 if HDtime == 'avg':
