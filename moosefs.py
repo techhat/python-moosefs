@@ -505,9 +505,9 @@ class MooseFS():
                                             usecwritesum, rops, wops, \
                                             usecreadmax, \
                                             usecwritemax = struct.unpack(
-                                            '>QQQQLLLL',
-                                            entry[plen+34:plen+34+48]
-                                        )
+                                                '>QQQQLLLL',
+                                                entry[plen+34:plen+34+48]
+                                            )
                                     elif HDperiod == 'hour':
                                         rbytes, wbytes, usecreadsum, \
                                             usecwritesum, rops, wops, \
